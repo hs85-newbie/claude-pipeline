@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { Providers } from "@/components/layout/providers";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -15,11 +17,15 @@ export default async function AppLayout({
     redirect("/auth/signin");
   }
 
-  // WHY: 온보딩 미완료 사용자는 온보딩 페이지로 리다이렉트
-  // 온보딩 페이지 자체에서는 무한 리다이렉트 방지
-  if (!session.user.onboarded) {
-    // 현재 경로가 온보딩이 아닌 경우에만 리다이렉트
-    // NOTE: 서버 컴포넌트에서 pathname 접근 불가하므로 미들웨어에서 처리 필요
+  // WHY: JWT의 onboarded는 캐시될 수 있으므로 DB에서 최신 상태 확인 후 쿠키 동기화
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboarded: true },
+  });
+
+  const cookieStore = await cookies();
+  if (dbUser?.onboarded) {
+    cookieStore.set("onboarded", "true", { path: "/", httpOnly: false });
   }
 
   return (
