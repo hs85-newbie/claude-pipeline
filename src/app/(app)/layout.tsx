@@ -32,7 +32,7 @@ export default async function AppLayout({
     <Providers>
       <div className="flex min-h-screen">
         <Sidebar />
-        <div className="flex-1 pl-[240px]">
+        <div className="flex-1 lg:pl-[240px]">
           <Header />
           <main className="mx-auto max-w-[1280px] p-6">{children}</main>
         </div>
