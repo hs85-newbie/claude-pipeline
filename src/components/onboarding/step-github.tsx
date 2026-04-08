@@ -37,7 +37,7 @@ export function StepGithub({ state, onNext }: Props) {
         <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-4">
           {status === "checking" && (
             <>
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="h-6 w-6 animate-spin text-primary" aria-label="연결 확인 중" />
               <div>
                 <p className="font-medium">연결 확인 중...</p>
                 <p className="text-sm text-muted-foreground">
@@ -48,7 +48,7 @@ export function StepGithub({ state, onNext }: Props) {
           )}
           {status === "connected" && (
             <>
-              <CheckCircle2 className="h-6 w-6 text-[hsl(var(--success))]" />
+              <CheckCircle2 className="h-6 w-6 text-[hsl(var(--success))]" aria-label="연결됨" />
               <div>
                 <p className="font-medium">
                   연결됨 — @{state.githubLogin}
@@ -61,7 +61,7 @@ export function StepGithub({ state, onNext }: Props) {
           )}
           {status === "error" && (
             <>
-              <XCircle className="h-6 w-6 text-destructive" />
+              <XCircle className="h-6 w-6 text-destructive" aria-label="연결 실패" />
               <div>
                 <p className="font-medium">연결 실패</p>
                 <p className="text-sm text-muted-foreground">

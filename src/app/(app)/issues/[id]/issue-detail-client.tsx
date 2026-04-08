@@ -16,9 +16,9 @@ import {
 import {
   ArrowLeft,
   ExternalLink,
-  Loader2,
   Trash2,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
@@ -47,6 +47,7 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // WHY: 이 이슈가 업데이트되면 자동 새로고침
   useEventSource("/api/events", {
@@ -82,7 +83,6 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
   }
 
   async function handleDelete() {
-    if (!confirm("이 이슈를 삭제하시겠습니까?")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/issues/${issue.id}`, { method: "DELETE" });
@@ -98,6 +98,7 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
       toast.error("이슈를 삭제할 수 없습니다.");
     } finally {
       setDeleting(false);
+      setDeleteDialogOpen(false);
     }
   }
 
@@ -129,16 +130,20 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
             variant="outline"
             size="sm"
             className="text-destructive hover:text-destructive"
-            onClick={handleDelete}
-            disabled={deleting}
+            onClick={() => setDeleteDialogOpen(true)}
           >
-            {deleting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="mr-2 h-4 w-4" />
-            )}
+            <Trash2 className="mr-2 h-4 w-4" />
             삭제
           </Button>
+          <ConfirmDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="이슈 삭제"
+            description={`"${issue.title}" 이슈를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+            confirmLabel="삭제"
+            loading={deleting}
+            onConfirm={handleDelete}
+          />
         </div>
       </div>
 
@@ -277,42 +282,55 @@ function PipelineTimeline({ currentStage }: { currentStage: PipelineStage }) {
   const isFailed = currentStage === "FAILED";
 
   return (
-    <div className="flex items-center gap-2">
-      {PIPELINE_ORDER.map((stage, i) => {
-        const cfg = PIPELINE_CONFIG[stage];
-        const isActive = i === currentIndex;
-        const isDone = i < currentIndex;
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2" role="list" aria-label="파이프라인 진행 상태">
+        {PIPELINE_ORDER.map((stage, i) => {
+          const cfg = PIPELINE_CONFIG[stage];
+          const isActive = i === currentIndex;
+          const isDone = i < currentIndex;
 
-        return (
-          <div key={stage} className="flex items-center gap-2">
-            {i > 0 && (
+          return (
+            <div key={stage} className="flex items-center gap-2" role="listitem">
+              {i > 0 && (
+                <div
+                  className={`h-px w-4 sm:w-6 ${isDone ? "bg-[hsl(var(--success))]" : "bg-border"}`}
+                  aria-hidden="true"
+                />
+              )}
               <div
-                className={`h-px w-6 ${isDone ? "bg-[hsl(var(--success))]" : "bg-border"}`}
-              />
-            )}
-            <div
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                isFailed && isActive
-                  ? "bg-destructive/20 text-destructive"
-                  : isActive
-                    ? "bg-primary/20 text-primary"
-                    : isDone
-                      ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
-                      : "bg-muted text-muted-foreground"
-              }`}
-            >
-              <span>{cfg.icon}</span>
-              <span>{cfg.label}</span>
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  isFailed && isActive
+                    ? "bg-destructive/20 text-destructive"
+                    : isActive
+                      ? "bg-primary/20 text-primary"
+                      : isDone
+                        ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
+                        : "bg-muted text-muted-foreground"
+                }`}
+                aria-current={isActive ? "step" : undefined}
+              >
+                <span aria-hidden="true">{cfg.icon}</span>
+                <span>{cfg.label}</span>
+              </div>
+            </div>
+          );
+        })}
+        {isFailed && (
+          <div className="flex items-center gap-2" role="listitem">
+            <div className="h-px w-4 sm:w-6 bg-destructive" aria-hidden="true" />
+            <div className="flex items-center gap-1.5 rounded-full bg-destructive/20 px-3 py-1 text-xs font-medium text-destructive">
+              <span aria-hidden="true">❌</span>
+              <span>실패</span>
             </div>
           </div>
-        );
-      })}
+        )}
+      </div>
       {isFailed && (
-        <div className="flex items-center gap-2">
-          <div className="h-px w-6 bg-destructive" />
-          <div className="flex items-center gap-1.5 rounded-full bg-destructive/20 px-3 py-1 text-xs font-medium text-destructive">
-            ❌ 실패
-          </div>
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+          <p className="text-sm font-medium text-destructive">파이프라인 실행에 실패했습니다</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            이슈 내용을 수정하거나 상태를 &quot;열림&quot;으로 변경하여 재실행할 수 있습니다.
+          </p>
         </div>
       )}
     </div>

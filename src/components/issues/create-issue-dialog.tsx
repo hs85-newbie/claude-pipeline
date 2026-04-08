@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -115,12 +116,12 @@ export function CreateIssueDialog({ projects }: Props) {
 
           <div className="space-y-2">
             <Label htmlFor="description">설명</Label>
-            <textarea
+            <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="이슈 상세 설명 (선택)"
-              className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-h-[100px]"
             />
           </div>
 

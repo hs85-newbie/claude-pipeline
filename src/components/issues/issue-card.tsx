@@ -30,7 +30,7 @@ export function IssueCard({ issue }: { issue: IssueCardData }) {
   const pipelineCfg = PIPELINE_CONFIG[issue.pipelineStage];
 
   return (
-    <Link href={`/issues/${issue.id}`}>
+    <Link href={`/issues/${issue.id}`} aria-label={`${issue.title} — ${statusCfg.label}, ${priorityCfg.label} 우선순위`}>
       <Card className="group p-4 transition-colors hover:bg-accent/50">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">

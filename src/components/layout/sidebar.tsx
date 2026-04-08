@@ -34,6 +34,7 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="sm"
+        aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
         className="fixed left-4 top-3.5 z-50 lg:hidden"
         onClick={() => setOpen(!open)}
       >

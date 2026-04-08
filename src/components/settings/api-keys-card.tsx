@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Key, Plus, Trash2, Copy, Loader2, CheckCircle2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { formatRelativeTime } from "@/lib/issue-helpers";
 
@@ -43,6 +44,7 @@ export function ApiKeysCard({ apiKeys, projects }: Props) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyProject, setNewKeyProject] = useState("all");
@@ -81,12 +83,12 @@ export function ApiKeysCard({ apiKeys, projects }: Props) {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("이 API 키를 삭제하시겠습니까? 이 키를 사용하는 서비스가 중단됩니다.")) return;
-    setDeleting(id);
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(deleteTarget.id);
 
     try {
-      const res = await fetch(`/api/api-keys/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/api-keys/${deleteTarget.id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message);
@@ -99,6 +101,7 @@ export function ApiKeysCard({ apiKeys, projects }: Props) {
       toast.error("API 키를 삭제할 수 없습니다.");
     } finally {
       setDeleting(null);
+      setDeleteTarget(null);
     }
   }
 
@@ -148,7 +151,7 @@ export function ApiKeysCard({ apiKeys, projects }: Props) {
                   <code className="flex-1 rounded-md border border-border bg-muted px-3 py-2 text-xs font-mono break-all">
                     {generatedKey}
                   </code>
-                  <Button size="sm" variant="outline" onClick={handleCopy}>
+                  <Button size="sm" variant="outline" onClick={handleCopy} aria-label={copied ? "복사 완료" : "API 키 복사"}>
                     {copied ? (
                       <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
                     ) : (
@@ -247,8 +250,9 @@ export function ApiKeysCard({ apiKeys, projects }: Props) {
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={`${key.name} 키 삭제`}
                   className="text-destructive hover:text-destructive"
-                  onClick={() => handleDelete(key.id)}
+                  onClick={() => setDeleteTarget({ id: key.id, name: key.name })}
                   disabled={deleting === key.id}
                 >
                   {deleting === key.id ? (
@@ -262,6 +266,16 @@ export function ApiKeysCard({ apiKeys, projects }: Props) {
           </div>
         )}
       </CardContent>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="API 키 삭제"
+        description={`"${deleteTarget?.name}" 키를 삭제하시겠습니까? 이 키를 사용하는 서비스가 중단됩니다.`}
+        confirmLabel="삭제"
+        loading={!!deleting}
+        onConfirm={handleDelete}
+      />
     </Card>
   );
 }

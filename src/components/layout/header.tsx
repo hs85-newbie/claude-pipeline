@@ -18,7 +18,10 @@ export function Header() {
     <header className="sticky top-0 z-20 flex h-14 items-center justify-end border-b border-border bg-background/80 px-6 backdrop-blur-sm">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent">
+          <button
+            aria-label="사용자 메뉴"
+            className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent"
+          >
             <Avatar className="h-7 w-7">
               <AvatarImage src={session?.user?.image ?? undefined} />
               <AvatarFallback className="text-xs">

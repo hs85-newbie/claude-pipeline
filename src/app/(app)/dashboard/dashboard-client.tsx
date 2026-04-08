@@ -60,9 +60,9 @@ export function DashboardClient({
       {/* 통계 카드 */}
       <StatCards stats={stats} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         {/* 최근 이슈 */}
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-medium text-muted-foreground">
               최근 이슈
