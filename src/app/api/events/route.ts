@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 // WHY: SSE로 이슈 상태 변경을 실시간 push. MVP에서는 DB polling(5초) → 변경 감지 시 전송.
-// Phase 2에서 Paperclip webhook 수신 시 push 방식으로 전환.
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -12,21 +11,34 @@ export async function GET() {
   const userId = session.user.id;
   const encoder = new TextEncoder();
 
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+  let heartbeatId: ReturnType<typeof setInterval> | null = null;
+
+  function cleanup() {
+    if (intervalId) clearInterval(intervalId);
+    if (heartbeatId) clearInterval(heartbeatId);
+    intervalId = null;
+    heartbeatId = null;
+  }
+
   const stream = new ReadableStream({
-    async start(controller) {
+    start(controller) {
       let lastCheck = new Date();
 
       function sendEvent(event: string, data: unknown) {
-        const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-        controller.enqueue(encoder.encode(payload));
+        try {
+          const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+          controller.enqueue(encoder.encode(payload));
+        } catch {
+          // WHY: 연결이 이미 닫힌 경우 enqueue 실패 → cleanup
+          cleanup();
+        }
       }
 
-      // 초기 연결 확인
       sendEvent("connected", { timestamp: lastCheck.toISOString() });
 
-      const interval = setInterval(async () => {
+      intervalId = setInterval(async () => {
         try {
-          // WHY: 마지막 체크 이후 업데이트된 이슈만 조회
           const updatedIssues = await prisma.issue.findMany({
             where: {
               project: { userId },
@@ -49,24 +61,14 @@ export async function GET() {
         }
       }, 5000);
 
-      // 30초마다 heartbeat
-      const heartbeat = setInterval(() => {
+      heartbeatId = setInterval(() => {
         sendEvent("heartbeat", { timestamp: new Date().toISOString() });
       }, 30000);
+    },
 
-      // cleanup 시 interval 정리
-      const cleanup = () => {
-        clearInterval(interval);
-        clearInterval(heartbeat);
-      };
-
-      // WHY: ReadableStream cancel 시 cleanup 필요
-      controller.close = new Proxy(controller.close, {
-        apply(target, thisArg) {
-          cleanup();
-          return Reflect.apply(target, thisArg, []);
-        },
-      });
+    // WHY: 클라이언트 연결 종료 시 cancel()이 호출됨 → 여기서 cleanup
+    cancel() {
+      cleanup();
     },
   });
 

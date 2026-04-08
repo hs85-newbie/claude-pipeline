@@ -25,7 +25,8 @@ export default async function AppLayout({
 
   const cookieStore = await cookies();
   if (dbUser?.onboarded) {
-    cookieStore.set("onboarded", "true", { path: "/", httpOnly: false });
+    // WHY: httpOnly=true로 클라이언트 JS에서 쿠키 변조 방지
+    cookieStore.set("onboarded", "true", { path: "/", httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
   }
 
   return (

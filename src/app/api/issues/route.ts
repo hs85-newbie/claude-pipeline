@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+const issueStatusEnum = z.enum(["OPEN", "IN_PROGRESS", "PR_CREATED", "MERGED", "CLOSED"]);
+
 const createIssueSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
@@ -21,15 +23,27 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const projectId = searchParams.get("projectId");
-  const status = searchParams.get("status");
+  const statusParam = searchParams.get("status");
   const page = parseInt(searchParams.get("page") ?? "1", 10);
-  const limit = parseInt(searchParams.get("limit") ?? "20", 10);
+  const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10), 100);
 
-  // WHY: 사용자 소유 프로젝트의 이슈만 조회 가능하도록 보안 필터
+  // WHY: status 파라미터 런타임 검증 — 유효하지 않은 enum 값 차단
+  let validatedStatus: z.infer<typeof issueStatusEnum> | undefined;
+  if (statusParam) {
+    const parsed = issueStatusEnum.safeParse(statusParam);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { data: null, error: { code: "VALIDATION_ERROR", message: "유효하지 않은 상태값입니다." } },
+        { status: 400 }
+      );
+    }
+    validatedStatus = parsed.data;
+  }
+
   const where = {
     project: { userId: session.user.id },
     ...(projectId ? { projectId } : {}),
-    ...(status ? { status: status as "OPEN" | "IN_PROGRESS" | "PR_CREATED" | "MERGED" | "CLOSED" } : {}),
+    ...(validatedStatus ? { status: validatedStatus } : {}),
   };
 
   const [issues, total] = await Promise.all([
