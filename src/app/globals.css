@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* 다크모드 기본 (기획서 디자인 시스템) */
+  :root {
+    --background: 0 0% 4%;          /* #0A0A0A */
+    --foreground: 0 0% 90%;         /* #E5E5E5 */
+
+    --card: 0 0% 8%;                /* #141414 */
+    --card-foreground: 0 0% 90%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 90%;
+
+    --primary: 217 91% 60%;         /* #3B82F6 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 11%;          /* #1C1C1C */
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 45%;   /* #737373 */
+
+    --accent: 0 0% 11%;
+    --accent-foreground: 0 0% 90%;
+
+    --destructive: 0 84% 60%;       /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;         /* #22C55E */
+    --warning: 38 92% 50%;          /* #F59E0B */
+
+    --border: 0 0% 15%;             /* #262626 */
+    --input: 0 0% 15%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.5rem;
+  }
+
+  /* 라이트모드 (Phase 2) */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

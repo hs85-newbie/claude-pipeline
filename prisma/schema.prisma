@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── NextAuth Adapter 테이블 ──
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  githubId      String?   @unique
+  githubLogin   String?
+  onboarded     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  projects Project[]
+  apiKeys  ApiKey[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── 핵심 도메인 ──
+
+model Project {
+  id                 String   @id @default(cuid())
+  name               String
+  githubOwner        String
+  githubRepo         String
+  defaultBranch      String   @default("main")
+  paperclipCompanyId String?
+  userId             String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issues  Issue[]
+  apiKeys ApiKey[]
+
+  @@unique([userId, githubOwner, githubRepo])
+}
+
+model Issue {
+  id            String        @id @default(cuid())
+  externalUuid  String?       @unique
+  title         String
+  description   String?       @db.Text
+  status        IssueStatus   @default(OPEN)
+  priority      IssuePriority @default(MEDIUM)
+  projectId     String
+  prUrl         String?
+  prNumber      Int?
+  pipelineStage PipelineStage @default(QUEUED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([externalUuid])
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  PR_CREATED
+  MERGED
+  CLOSED
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum PipelineStage {
+  QUEUED
+  ANALYZING
+  CODING
+  PR_REVIEW
+  MERGED
+  FAILED
+}
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  name      String
+  keyHash   String    @unique
+  keyPrefix String
+  lastUsed  DateTime?
+  userId    String
+  projectId String?
+  createdAt DateTime  @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
