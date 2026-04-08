@@ -15,11 +15,11 @@ import type { IssueStatus } from "@prisma/client";
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: "ALL", label: "전체" },
-  { value: "OPEN", label: "열림" },
+  { value: "OPEN", label: "대기 중" },
   { value: "IN_PROGRESS", label: "진행 중" },
   { value: "PR_CREATED", label: "PR 생성됨" },
-  { value: "MERGED", label: "머지됨" },
-  { value: "CLOSED", label: "닫힘" },
+  { value: "MERGED", label: "완료" },
+  { value: "CLOSED", label: "취소됨" },
 ];
 
 interface Props {

@@ -90,6 +90,7 @@ model Issue {
   description   String?       @db.Text
   status        IssueStatus   @default(OPEN)
   priority      IssuePriority @default(MEDIUM)
+  closeReason   CloseReason?
   projectId     String
   prUrl         String?
   prNumber      Int?
@@ -116,6 +117,13 @@ enum IssuePriority {
   MEDIUM
   HIGH
   CRITICAL
+}
+
+enum CloseReason {
+  USER_CANCELLED
+  PIPELINE_FAILED
+  DUPLICATE
+  WONT_FIX
 }
 
 enum PipelineStage {

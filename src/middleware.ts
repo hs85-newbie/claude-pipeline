@@ -28,16 +28,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // WHY: 온보딩 미완료 사용자는 온보딩 페이지로 리다이렉트
-  // Edge Runtime에서는 Prisma 사용 불가 → 쿠키 기반 체크
-  const onboarded = request.cookies.get("onboarded")?.value === "true";
-  const isOnboarding = pathname.startsWith("/onboarding");
-  const isApi = pathname.startsWith("/api");
-
-  if (isLoggedIn && !onboarded && !isOnboarding && !isApi) {
-    return NextResponse.redirect(new URL("/onboarding", request.url));
-  }
-
   return NextResponse.next();
 }
 

@@ -20,11 +20,6 @@ export function Hero() {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center"
       >
-        {/* 뱃지 */}
-        <div className="mb-6 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted-foreground">
-          GitHub Actions 무료 + 당신의 Claude
-        </div>
-
         {/* 헤드라인 */}
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
           이슈 하나로{" "}

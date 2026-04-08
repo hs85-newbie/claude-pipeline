@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Providers } from "@/components/layout/providers";
@@ -17,16 +17,18 @@ export default async function AppLayout({
     redirect("/auth/signin");
   }
 
-  // WHY: JWT의 onboarded는 캐시될 수 있으므로 DB에서 최신 상태 확인 후 쿠키 동기화
+  // WHY: DB에서 onboarded 최신 상태 확인 → 미완료 시 온보딩 리다이렉트
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { onboarded: true },
   });
 
-  const cookieStore = await cookies();
-  if (dbUser?.onboarded) {
-    // WHY: httpOnly=true로 클라이언트 JS에서 쿠키 변조 방지
-    cookieStore.set("onboarded", "true", { path: "/", httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+  const headerList = await headers();
+  const pathname = headerList.get("x-next-url") ?? headerList.get("x-invoke-path") ?? "";
+  const isOnboarding = pathname.startsWith("/onboarding");
+
+  if (!dbUser?.onboarded && !isOnboarding) {
+    redirect("/onboarding");
   }
 
   return (

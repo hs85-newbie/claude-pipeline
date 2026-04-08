@@ -62,4 +62,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
+  // WHY: localhost 개발 시 PKCE 쿠키가 Secure 속성으로 설정되면 HTTP에서 전송 안 됨
+  // useSecureCookies를 명시적으로 false로 설정하여 localhost 호환성 확보
+  useSecureCookies: process.env.NODE_ENV === "production",
 });

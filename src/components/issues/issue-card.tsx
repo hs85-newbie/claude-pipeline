@@ -8,9 +8,10 @@ import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
   PIPELINE_CONFIG,
+  CLOSE_REASON_CONFIG,
   formatRelativeTime,
 } from "@/lib/issue-helpers";
-import type { IssueStatus, IssuePriority, PipelineStage } from "@prisma/client";
+import type { IssueStatus, IssuePriority, PipelineStage, CloseReason } from "@prisma/client";
 
 export interface IssueCardData {
   id: string;
@@ -18,6 +19,7 @@ export interface IssueCardData {
   status: IssueStatus;
   priority: IssuePriority;
   pipelineStage: PipelineStage;
+  closeReason: CloseReason | null;
   prUrl: string | null;
   prNumber: number | null;
   updatedAt: string;
@@ -55,6 +57,11 @@ export function IssueCard({ issue }: { issue: IssueCardData }) {
               <span className="text-xs text-muted-foreground">
                 {pipelineCfg.icon} {pipelineCfg.label}
               </span>
+              {issue.status === "CLOSED" && issue.closeReason && (
+                <span className={`text-xs ${CLOSE_REASON_CONFIG[issue.closeReason].color}`}>
+                  {CLOSE_REASON_CONFIG[issue.closeReason].label}
+                </span>
+              )}
               {issue.prUrl && (
                 <a
                   href={issue.prUrl}

@@ -14,6 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   ExternalLink,
   Trash2,
@@ -23,11 +29,12 @@ import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
   PIPELINE_CONFIG,
+  CLOSE_REASON_CONFIG,
   formatRelativeTime,
 } from "@/lib/issue-helpers";
 import { useEventSource } from "@/lib/use-event-source";
 import { toast } from "sonner";
-import type { IssueStatus, IssuePriority, PipelineStage } from "@prisma/client";
+import type { IssueStatus, IssuePriority, PipelineStage, CloseReason } from "@prisma/client";
 
 interface IssueDetail {
   id: string;
@@ -36,6 +43,7 @@ interface IssueDetail {
   status: IssueStatus;
   priority: IssuePriority;
   pipelineStage: PipelineStage;
+  closeReason: CloseReason | null;
   prUrl: string | null;
   prNumber: number | null;
   createdAt: string;
@@ -48,6 +56,8 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [closeReasonDialogOpen, setCloseReasonDialogOpen] = useState(false);
+  const [pendingCloseReason, setPendingCloseReason] = useState<CloseReason>("USER_CANCELLED");
 
   // WHY: 이 이슈가 업데이트되면 자동 새로고침
   useEventSource("/api/events", {
@@ -60,12 +70,22 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
   });
 
   async function handleStatusChange(status: IssueStatus) {
+    // WHY: CLOSED 상태 전환 시 사유를 먼저 선택하도록 다이얼로그 표시
+    if (status === "CLOSED") {
+      setCloseReasonDialogOpen(true);
+      return;
+    }
+
+    await updateStatus(status, null);
+  }
+
+  async function updateStatus(status: IssueStatus, closeReason: CloseReason | null) {
     setUpdating(true);
     try {
       const res = await fetch(`/api/issues/${issue.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, closeReason }),
       });
       const json = await res.json();
       if (json.error) {
@@ -79,6 +99,7 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
       toast.error("상태를 변경할 수 없습니다.");
     } finally {
       setUpdating(false);
+      setCloseReasonDialogOpen(false);
     }
   }
 
@@ -144,6 +165,44 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
             loading={deleting}
             onConfirm={handleDelete}
           />
+
+          {/* 취소 사유 선택 다이얼로그 */}
+          <Dialog open={closeReasonDialogOpen} onOpenChange={setCloseReasonDialogOpen}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>취소 사유 선택</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Select
+                  value={pendingCloseReason}
+                  onValueChange={(v) => setPendingCloseReason(v as CloseReason)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(CLOSE_REASON_CONFIG).map(([key, cfg]) => (
+                      <SelectItem key={key} value={key}>
+                        {cfg.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setCloseReasonDialogOpen(false)}>
+                    취소
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={updating}
+                    onClick={() => updateStatus("CLOSED", pendingCloseReason)}
+                  >
+                    확인
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -224,6 +283,18 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
                   {pipelineCfg.icon} {pipelineCfg.label}
                 </span>
               </div>
+
+              {/* 취소 사유 */}
+              {issue.status === "CLOSED" && issue.closeReason && (
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                    취소 사유
+                  </p>
+                  <Badge variant="outline" className={CLOSE_REASON_CONFIG[issue.closeReason].color}>
+                    {CLOSE_REASON_CONFIG[issue.closeReason].label}
+                  </Badge>
+                </div>
+              )}
 
               {/* PR 링크 */}
               {issue.prUrl && (

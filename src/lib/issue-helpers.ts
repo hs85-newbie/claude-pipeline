@@ -1,11 +1,11 @@
-import type { IssueStatus, IssuePriority, PipelineStage } from "@prisma/client";
+import type { IssueStatus, IssuePriority, PipelineStage, CloseReason } from "@prisma/client";
 
-export const STATUS_CONFIG: Record<IssueStatus, { label: string; color: string }> = {
-  OPEN: { label: "열림", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  IN_PROGRESS: { label: "진행 중", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  PR_CREATED: { label: "PR 생성됨", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-  MERGED: { label: "머지됨", color: "bg-green-500/20 text-green-400 border-green-500/30" },
-  CLOSED: { label: "닫힘", color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
+export const STATUS_CONFIG: Record<IssueStatus, { label: string; color: string; description: string }> = {
+  OPEN: { label: "대기 중", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", description: "파이프라인 실행 대기" },
+  IN_PROGRESS: { label: "진행 중", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", description: "AI가 코드 수정 중" },
+  PR_CREATED: { label: "PR 생성됨", color: "bg-purple-500/20 text-purple-400 border-purple-500/30", description: "리뷰 대기 중" },
+  MERGED: { label: "완료", color: "bg-green-500/20 text-green-400 border-green-500/30", description: "PR 머지 완료" },
+  CLOSED: { label: "취소됨", color: "bg-gray-500/20 text-gray-400 border-gray-500/30", description: "수동 취소 또는 불필요" },
 };
 
 export const PRIORITY_CONFIG: Record<IssuePriority, { label: string; color: string }> = {
@@ -22,6 +22,13 @@ export const PIPELINE_CONFIG: Record<PipelineStage, { label: string; icon: strin
   PR_REVIEW: { label: "PR 리뷰", icon: "📝" },
   MERGED: { label: "완료", icon: "✅" },
   FAILED: { label: "실패", icon: "❌" },
+};
+
+export const CLOSE_REASON_CONFIG: Record<CloseReason, { label: string; color: string }> = {
+  USER_CANCELLED: { label: "사용자 취소", color: "text-gray-400" },
+  PIPELINE_FAILED: { label: "파이프라인 실패", color: "text-red-400" },
+  DUPLICATE: { label: "중복 이슈", color: "text-orange-400" },
+  WONT_FIX: { label: "수정 불필요", color: "text-gray-400" },
 };
 
 /**

@@ -8,6 +8,7 @@ const updateIssueSchema = z.object({
   description: z.string().optional(),
   status: z.enum(["OPEN", "IN_PROGRESS", "PR_CREATED", "MERGED", "CLOSED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+  closeReason: z.enum(["USER_CANCELLED", "PIPELINE_FAILED", "DUPLICATE", "WONT_FIX"]).optional().nullable(),
   pipelineStage: z.enum(["QUEUED", "ANALYZING", "CODING", "PR_REVIEW", "MERGED", "FAILED"]).optional(),
   prUrl: z.string().url().optional().nullable(),
   prNumber: z.number().optional().nullable(),
