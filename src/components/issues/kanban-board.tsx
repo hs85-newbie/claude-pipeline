@@ -10,6 +10,7 @@ const KANBAN_COLUMNS: IssueStatus[] = [
   "IN_PROGRESS",
   "PR_CREATED",
   "MERGED",
+  "CLOSED",
 ];
 
 export function KanbanBoard({ issues }: { issues: IssueCardData[] }) {
