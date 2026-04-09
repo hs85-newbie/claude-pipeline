@@ -1,15 +1,14 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { requireOnboarded } from "@/lib/require-onboarded";
 import { SettingsClient } from "./settings-client";
 
 export default async function SettingsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/auth/signin");
+  const userId = await requireOnboarded();
 
   const [user, apiKeys, projects] = await Promise.all([
     prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -20,7 +19,7 @@ export default async function SettingsPage() {
       },
     }),
     prisma.apiKey.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       select: {
         id: true,
         name: true,
@@ -32,7 +31,7 @@ export default async function SettingsPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.project.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),

@@ -1,14 +1,12 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { requireOnboarded } from "@/lib/require-onboarded";
 import { ProjectsClient } from "./projects-client";
 
 export default async function ProjectsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/auth/signin");
+  const userId = await requireOnboarded();
 
   const projects = await prisma.project.findMany({
-    where: { userId: session.user.id },
+    where: { userId },
     include: {
       _count: { select: { issues: true, apiKeys: true } },
     },

@@ -1,25 +1,23 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { requireOnboarded } from "@/lib/require-onboarded";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/auth/signin");
+  const userId = await requireOnboarded();
 
   const [projects, issueStats, recentIssues] = await Promise.all([
     prisma.project.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       include: { _count: { select: { issues: true } } },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.issue.groupBy({
       by: ["status"],
-      where: { project: { userId: session.user.id } },
+      where: { project: { userId } },
       _count: true,
     }),
     prisma.issue.findMany({
-      where: { project: { userId: session.user.id } },
+      where: { project: { userId } },
       include: {
         project: { select: { name: true, githubOwner: true, githubRepo: true } },
       },
@@ -38,7 +36,7 @@ export default async function DashboardPage() {
   // WHY: 파이프라인 실행 중인 이슈 수 = ANALYZING | CODING 단계
   const activeDispatchCount = await prisma.issue.count({
     where: {
-      project: { userId: session.user.id },
+      project: { userId },
       pipelineStage: { in: ["ANALYZING", "CODING"] },
     },
   });
