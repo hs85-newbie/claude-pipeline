@@ -20,8 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { detectIssueType, ISSUE_TYPE_CONFIG } from "@/lib/issue-helpers";
 
 interface Project {
   id: string;
@@ -38,6 +40,7 @@ export function CreateIssueDialog({ projects }: Props) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [issueType, setIssueType] = useState("CODE_FIX");
   const [priority, setPriority] = useState("MEDIUM");
   const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
 
@@ -50,7 +53,7 @@ export function CreateIssueDialog({ projects }: Props) {
       const res = await fetch("/api/issues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, priority, projectId }),
+        body: JSON.stringify({ title, description, type: issueType, priority, projectId }),
       });
 
       const json = await res.json();
@@ -64,6 +67,7 @@ export function CreateIssueDialog({ projects }: Props) {
       setOpen(false);
       setTitle("");
       setDescription("");
+      setIssueType("CODE_FIX");
       setPriority("MEDIUM");
       router.refresh();
     } catch (error) {
@@ -108,10 +112,36 @@ export function CreateIssueDialog({ projects }: Props) {
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                // WHY: 제목 기반 유형 자동 추천 — 사용자가 직접 변경 가능
+                setIssueType(detectIssueType(e.target.value));
+              }}
               placeholder="이슈 제목을 입력하세요"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>유형</Label>
+            <RadioGroup
+              value={issueType}
+              onValueChange={setIssueType}
+              className="flex gap-4"
+            >
+              {Object.entries(ISSUE_TYPE_CONFIG).map(([key, cfg]) => (
+                <label
+                  key={key}
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+                >
+                  <RadioGroupItem value={key} />
+                  <div>
+                    <p className="font-medium">{cfg.label}</p>
+                    <p className="text-xs text-muted-foreground">{cfg.description}</p>
+                  </div>
+                </label>
+              ))}
+            </RadioGroup>
           </div>
 
           <div className="space-y-2">

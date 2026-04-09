@@ -89,6 +89,7 @@ model Issue {
   title         String
   description   String?       @db.Text
   status        IssueStatus   @default(OPEN)
+  type          IssueType     @default(CODE_FIX)
   priority      IssuePriority @default(MEDIUM)
   closeReason   CloseReason?
   projectId     String
@@ -117,6 +118,11 @@ enum IssuePriority {
   MEDIUM
   HIGH
   CRITICAL
+}
+
+enum IssueType {
+  CODE_FIX
+  ANALYSIS
 }
 
 enum CloseReason {

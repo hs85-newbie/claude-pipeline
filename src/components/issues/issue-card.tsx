@@ -7,16 +7,18 @@ import { ExternalLink } from "lucide-react";
 import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
+  ISSUE_TYPE_CONFIG,
   PIPELINE_CONFIG,
   CLOSE_REASON_CONFIG,
   formatRelativeTime,
 } from "@/lib/issue-helpers";
-import type { IssueStatus, IssuePriority, PipelineStage, CloseReason } from "@prisma/client";
+import type { IssueStatus, IssuePriority, IssueType, PipelineStage, CloseReason } from "@prisma/client";
 
 export interface IssueCardData {
   id: string;
   title: string;
   status: IssueStatus;
+  type: IssueType;
   priority: IssuePriority;
   pipelineStage: PipelineStage;
   closeReason: CloseReason | null;
@@ -43,6 +45,11 @@ export function IssueCard({ issue }: { issue: IssueCardData }) {
               <span className={`text-xs ${priorityCfg.color}`}>
                 {priorityCfg.label}
               </span>
+              {issue.type === "ANALYSIS" && (
+                <Badge variant="secondary" className="text-xs">
+                  {ISSUE_TYPE_CONFIG.ANALYSIS.label}
+                </Badge>
+              )}
             </div>
             <h3 className="mt-1 truncate text-sm font-medium group-hover:text-primary">
               {issue.title}

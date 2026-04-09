@@ -28,19 +28,21 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
+  ISSUE_TYPE_CONFIG,
   PIPELINE_CONFIG,
   CLOSE_REASON_CONFIG,
   formatRelativeTime,
 } from "@/lib/issue-helpers";
 import { useEventSource } from "@/lib/use-event-source";
 import { toast } from "sonner";
-import type { IssueStatus, IssuePriority, PipelineStage, CloseReason } from "@prisma/client";
+import type { IssueStatus, IssuePriority, IssueType, PipelineStage, CloseReason } from "@prisma/client";
 
 interface IssueDetail {
   id: string;
   title: string;
   description: string | null;
   status: IssueStatus;
+  type: IssueType;
   priority: IssuePriority;
   pipelineStage: PipelineStage;
   closeReason: CloseReason | null;
@@ -271,6 +273,16 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
                 </p>
                 <Badge variant="outline" className={priorityCfg.color}>
                   {priorityCfg.label}
+                </Badge>
+              </div>
+
+              {/* 유형 */}
+              <div>
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                  유형
+                </p>
+                <Badge variant={issue.type === "ANALYSIS" ? "secondary" : "outline"}>
+                  {ISSUE_TYPE_CONFIG[issue.type].label}
                 </Badge>
               </div>
 
