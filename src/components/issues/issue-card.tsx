@@ -45,11 +45,9 @@ export function IssueCard({ issue }: { issue: IssueCardData }) {
               <span className={`text-xs ${priorityCfg.color}`}>
                 {priorityCfg.label}
               </span>
-              {issue.type === "ANALYSIS" && (
-                <Badge variant="secondary" className="text-xs">
-                  {ISSUE_TYPE_CONFIG.ANALYSIS.label}
-                </Badge>
-              )}
+              <Badge variant="secondary" className="text-xs">
+                {ISSUE_TYPE_CONFIG[issue.type].label}
+              </Badge>
             </div>
             <h3 className="mt-1 truncate text-sm font-medium group-hover:text-primary">
               {issue.title}
