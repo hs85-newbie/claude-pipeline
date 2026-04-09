@@ -58,6 +58,7 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dispatching, setDispatching] = useState(false);
   const [closeReasonDialogOpen, setCloseReasonDialogOpen] = useState(false);
   const [pendingCloseReason, setPendingCloseReason] = useState<CloseReason>("USER_CANCELLED");
 
@@ -125,6 +126,29 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
     }
   }
 
+  async function handleDispatch() {
+    setDispatching(true);
+    try {
+      const res = await fetch("/api/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ issueId: issue.id }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
+      toast.success("파이프라인이 실행되었습니다.");
+      router.refresh();
+    } catch (error) {
+      console.error("[Issue] Dispatch 실패:", error);
+      toast.error("파이프라인을 실행할 수 없습니다.");
+    } finally {
+      setDispatching(false);
+    }
+  }
+
   const priorityCfg = PRIORITY_CONFIG[issue.priority];
   const pipelineCfg = PIPELINE_CONFIG[issue.pipelineStage];
 
@@ -149,6 +173,20 @@ export function IssueDetailClient({ issue }: { issue: IssueDetail }) {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          {issue.status === "OPEN" && (
+            <Button
+              size="sm"
+              onClick={handleDispatch}
+              disabled={dispatching}
+            >
+              {dispatching ? (
+                <span className="mr-2 h-4 w-4 animate-spin">⏳</span>
+              ) : (
+                <span className="mr-2">🚀</span>
+              )}
+              파이프라인 실행
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

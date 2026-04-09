@@ -1,0 +1,159 @@
+# PipeAI 파이프라인 워크플로우
+# 이슈에서 dispatch → Claude Code 실행 → PR 생성 → 상태 보고
+name: PipeAI Dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_id:
+        description: "PipeAI 이슈 ID"
+        required: true
+      task:
+        description: "작업 내용"
+        required: true
+      issue_type:
+        description: "이슈 유형 (CODE_FIX | ANALYSIS)"
+        required: true
+        default: "CODE_FIX"
+      callback_url:
+        description: "PipeAI 상태 보고 URL"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 상태 보고 — 진행 중
+        run: |
+          curl -s -X POST "${{ inputs.callback_url }}" \
+            -H "Authorization: Bearer ${{ secrets.PIPELINE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "issue_id": "${{ inputs.issue_id }}",
+              "status": "IN_PROGRESS",
+              "pipeline_stage": "${{ inputs.issue_type == 'ANALYSIS' && 'ANALYZING' || 'CODING' }}"
+            }'
+
+      - name: Claude Code 실행
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            ${{ inputs.task }}
+
+            ## 규칙
+            - 분석 유형이면 docs/ANALYSIS-${{ inputs.issue_id }}.md 파일만 생성하세요. 코드 수정 금지.
+            - 코드 수정 유형이면 필요한 코드를 수정하고 커밋하세요.
+            - 커밋 메시지: feat/fix/chore 타입 사용
+          max_turns: ${{ inputs.issue_type == 'ANALYSIS' && '5' || '15' }}
+
+      - name: PR 생성
+        id: create_pr
+        run: |
+          BRANCH="pipeai/issue-${{ inputs.issue_id }}"
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+
+          # 변경사항 확인
+          if git diff --quiet HEAD; then
+            echo "변경사항 없음"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH"
+
+          # WHY: 분석 작업은 승인 없이 자동 머지
+          if [ "${{ inputs.issue_type }}" = "ANALYSIS" ]; then
+            PR_URL=$(gh pr create \
+              --base "$DEFAULT_BRANCH" \
+              --head "$BRANCH" \
+              --title "[PipeAI] 분석: ${{ inputs.task }}" \
+              --body "PipeAI 자동 분석 결과입니다. 자동 머지됩니다." \
+              --json url -q '.url')
+
+            # 자동 머지
+            gh pr merge "$PR_URL" --squash --auto
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+            echo "auto_merged=true" >> $GITHUB_OUTPUT
+          else
+            PR_URL=$(gh pr create \
+              --base "$DEFAULT_BRANCH" \
+              --head "$BRANCH" \
+              --title "[PipeAI] ${{ inputs.task }}" \
+              --body "PipeAI가 생성한 PR입니다. 검토 후 머지해주세요." \
+              --json url -q '.url')
+
+            PR_NUMBER=$(echo "$PR_URL" | grep -oP '\d+$')
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "auto_merged=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 상태 보고 — 완료
+        if: always()
+        run: |
+          HAS_CHANGES="${{ steps.create_pr.outputs.has_changes }}"
+          AUTO_MERGED="${{ steps.create_pr.outputs.auto_merged }}"
+          PR_URL="${{ steps.create_pr.outputs.pr_url }}"
+          PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
+          JOB_STATUS="${{ job.status }}"
+
+          if [ "$JOB_STATUS" != "success" ]; then
+            # 실패
+            curl -s -X POST "${{ inputs.callback_url }}" \
+              -H "Authorization: Bearer ${{ secrets.PIPELINE_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"issue_id\": \"${{ inputs.issue_id }}\",
+                \"status\": \"CLOSED\",
+                \"pipeline_stage\": \"FAILED\",
+                \"close_reason\": \"PIPELINE_FAILED\"
+              }"
+          elif [ "$AUTO_MERGED" = "true" ]; then
+            # 분석 작업 자동 머지 완료
+            curl -s -X POST "${{ inputs.callback_url }}" \
+              -H "Authorization: Bearer ${{ secrets.PIPELINE_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"issue_id\": \"${{ inputs.issue_id }}\",
+                \"status\": \"MERGED\",
+                \"pipeline_stage\": \"MERGED\",
+                \"pr_url\": \"$PR_URL\"
+              }"
+          elif [ "$HAS_CHANGES" = "true" ]; then
+            # 코드 수정 PR 생성 → 리뷰 대기
+            curl -s -X POST "${{ inputs.callback_url }}" \
+              -H "Authorization: Bearer ${{ secrets.PIPELINE_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"issue_id\": \"${{ inputs.issue_id }}\",
+                \"status\": \"PR_CREATED\",
+                \"pipeline_stage\": \"PR_REVIEW\",
+                \"pr_url\": \"$PR_URL\",
+                \"pr_number\": $PR_NUMBER
+              }"
+          else
+            # 변경사항 없음
+            curl -s -X POST "${{ inputs.callback_url }}" \
+              -H "Authorization: Bearer ${{ secrets.PIPELINE_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"issue_id\": \"${{ inputs.issue_id }}\",
+                \"status\": \"CLOSED\",
+                \"pipeline_stage\": \"FAILED\",
+                \"close_reason\": \"WONT_FIX\"
+              }"
+          fi

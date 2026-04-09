@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { recoverStuckIssues } from "@/lib/dispatch";
 
 // WHY: SSE로 이슈 상태 변경을 실시간 push. MVP에서는 DB polling(5초) → 변경 감지 시 전송.
 export async function GET() {
@@ -24,6 +25,7 @@ export async function GET() {
   const stream = new ReadableStream({
     start(controller) {
       let lastCheck = new Date();
+      let stuckCheckCounter = 0;
 
       function sendEvent(event: string, data: unknown) {
         try {
@@ -56,6 +58,16 @@ export async function GET() {
           }
 
           lastCheck = new Date();
+
+          // WHY: 5분마다 stuck 이슈 체크 (polling 12회 = 60초, 60회 = 5분)
+          stuckCheckCounter++;
+          if (stuckCheckCounter >= 60) {
+            const recovered = await recoverStuckIssues(userId);
+            if (recovered > 0) {
+              sendEvent("issues:recovered", { count: recovered });
+            }
+            stuckCheckCounter = 0;
+          }
         } catch (error) {
           console.error("[SSE] polling 에러:", error);
         }

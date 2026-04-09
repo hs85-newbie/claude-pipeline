@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   const isPublic = pathname === "/" || pathname.startsWith("/docs");
   const isAuthPage = pathname.startsWith("/auth");
   const isApiAuth = pathname.startsWith("/api/auth");
-  const isApiPublic = pathname === "/api/health";
+  const isApiPublic = pathname === "/api/health" || pathname.startsWith("/api/webhooks");
 
   if (isApiAuth || isApiPublic || isPublic) return NextResponse.next();
 
