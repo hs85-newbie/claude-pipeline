@@ -5,7 +5,7 @@ export const STATUS_CONFIG: Record<IssueStatus, { label: string; color: string; 
   IN_PROGRESS: { label: "진행 중", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", description: "AI가 코드 수정 중" },
   PR_CREATED: { label: "PR 생성됨", color: "bg-purple-500/20 text-purple-400 border-purple-500/30", description: "리뷰 대기 중" },
   MERGED: { label: "완료", color: "bg-green-500/20 text-green-400 border-green-500/30", description: "PR 머지 완료" },
-  CLOSED: { label: "취소됨", color: "bg-gray-500/20 text-gray-400 border-gray-500/30", description: "수동 취소 또는 불필요" },
+  CLOSED: { label: "취소됨", color: "bg-red-500/20 text-red-400 border-red-500/30", description: "수동 취소 또는 불필요" },
 };
 
 export const PRIORITY_CONFIG: Record<IssuePriority, { label: string; color: string }> = {
