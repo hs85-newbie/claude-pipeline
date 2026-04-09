@@ -29,18 +29,6 @@ export const ISSUE_TYPE_CONFIG: Record<IssueType, { label: string; description: 
   ANALYSIS: { label: "분석", description: "코드를 분석하고 ANALYSIS 파일을 생성합니다 (자동 머지)" },
 };
 
-// WHY: 제목에 분석 관련 키워드가 있으면 자동으로 ANALYSIS 유형으로 판단
-const ANALYSIS_KEYWORDS = ["점검", "분석", "제안", "검토"];
-
-/**
- * 제목 기반 이슈 유형 자동 판단
- * @param title - 이슈 제목
- * @returns 추천 유형
- */
-export function detectIssueType(title: string): IssueType {
-  return ANALYSIS_KEYWORDS.some((kw) => title.includes(kw)) ? "ANALYSIS" : "CODE_FIX";
-}
-
 export const CLOSE_REASON_CONFIG: Record<CloseReason, { label: string; color: string }> = {
   USER_CANCELLED: { label: "사용자 취소", color: "text-gray-400" },
   PIPELINE_FAILED: { label: "파이프라인 실패", color: "text-red-400" },
