@@ -2,9 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cpu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Cpu, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAllProviders } from "@/lib/providers";
+import { getAllProviders, getProvider } from "@/lib/providers";
 import type { AiProviderType } from "@/lib/providers";
 import type { OnboardingState } from "./onboarding-wizard";
 
@@ -17,6 +18,9 @@ interface Props {
 const providers = getAllProviders();
 
 export function StepProvider({ state, setState, onNext }: Props) {
+  const selectedProvider = getProvider(state.provider);
+  const showBetaNotice = selectedProvider.beta && selectedProvider.betaNotice;
+
   function handleSelect(type: AiProviderType) {
     setState((prev) => ({ ...prev, provider: type }));
   }
@@ -63,7 +67,14 @@ export function StepProvider({ state, setState, onNext }: Props) {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{p.displayName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{p.displayName}</p>
+                    {p.beta && (
+                      <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-medium">
+                        BETA
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {p.description}
                   </p>
@@ -72,6 +83,15 @@ export function StepProvider({ state, setState, onNext }: Props) {
             );
           })}
         </div>
+
+        {showBetaNotice && (
+          <div className="flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <p className="text-xs text-muted-foreground">
+              {selectedProvider.betaNotice}
+            </p>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <Button onClick={onNext} disabled={!state.provider}>

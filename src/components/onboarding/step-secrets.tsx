@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, CheckCircle2, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Shield, CheckCircle2, ExternalLink, AlertTriangle } from "lucide-react";
 import { getProvider } from "@/lib/providers";
 import type { OnboardingState } from "./onboarding-wizard";
 
@@ -30,13 +31,25 @@ export function StepSecrets({ state, onNext }: Props) {
       </CardHeader>
       <CardContent className="space-y-6">
         <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">
+          <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
             {provider.displayName}
+            {provider.beta && (
+              <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-medium">
+                BETA
+              </Badge>
+            )}
           </span>{" "}
           파이프라인이 정상 동작하려면 아래 Secrets를 레포에 등록해야 합니다.
           <br />
           대시보드에서 나중에 설정할 수도 있습니다.
         </p>
+
+        {provider.beta && provider.betaNotice && (
+          <div className="flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <p className="text-xs text-muted-foreground">{provider.betaNotice}</p>
+          </div>
+        )}
 
         <div className="space-y-3">
           {secrets.map((secret) => (

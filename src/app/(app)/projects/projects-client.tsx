@@ -170,6 +170,7 @@ export function ProjectsClient({ projects }: { projects: ProjectItem[] }) {
                       {AI_PROVIDERS.map((p) => (
                         <SelectItem key={p.type} value={p.type} className="text-xs">
                           {p.displayName}
+                          {p.beta && " (Beta)"}
                         </SelectItem>
                       ))}
                     </SelectContent>

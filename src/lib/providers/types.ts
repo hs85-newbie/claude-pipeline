@@ -36,6 +36,10 @@ export interface AiProvider {
   readonly description: string;
   /** 대상 워크플로우 파일명 */
   readonly workflowFileName: string;
+  /** Beta 여부 — UI에 배지 표시 */
+  readonly beta?: boolean;
+  /** Beta 사용 시 안내할 주의사항 */
+  readonly betaNotice?: string;
 
   /**
    * dispatch용 task 설명문 생성

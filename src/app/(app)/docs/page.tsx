@@ -141,7 +141,12 @@ export default function DocsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">OpenAI Codex</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  OpenAI Codex
+                  <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-medium">
+                    BETA
+                  </Badge>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
@@ -153,6 +158,9 @@ export default function DocsPage() {
                   <li>API Keys → Create new secret key</li>
                   <li>레포 Settings → Secrets → Actions에 등록</li>
                 </ol>
+                <p className="mt-2 text-xs text-amber-500">
+                  ⚠️ Beta: 출력 품질 편차 가능. 프로덕션은 Claude 권장.
+                </p>
               </CardContent>
             </Card>
           </div>
