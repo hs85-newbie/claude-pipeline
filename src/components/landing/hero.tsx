@@ -22,7 +22,6 @@ export function Hero() {
       >
         {/* 헤드라인 */}
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-          이슈 하나로{" "}
           <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
             코드 수정부터 PR 머지까지
           </span>

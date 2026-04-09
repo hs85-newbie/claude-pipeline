@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Claude Pipeline — 이슈 하나로 코드 수정부터 PR 머지까지",
+  title: "PipeAI — 코드 수정부터 PR 머지까지",
   description:
-    "GitHub + Claude = 자율 개발 파이프라인. 이슈만 남기면 AI가 코드 분석, 수정, PR 생성까지 자동으로.",
+    "이슈만 남기면 AI가 코드 분석, 수정, PR 생성까지 자동으로. 원하는 AI를 선택하세요.",
 };
 
 export default function RootLayout({
