@@ -15,7 +15,7 @@ export default function DocsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">문서</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Claude Pipeline을 시작하고 활용하는 방법을 안내합니다.
+          PipeAI를 시작하고 활용하는 방법을 안내합니다.
         </p>
       </div>
 
@@ -38,8 +38,8 @@ export default function DocsPage() {
           />
           <StepCard
             step={3}
-            title="Secrets 설정"
-            description="레포의 GitHub Actions Secrets에 CLAUDE_CODE_OAUTH_TOKEN과 PIPELINE_API_KEY를 등록합니다."
+            title="AI Provider 선택 + Secrets 설정"
+            description="Claude Code 또는 OpenAI Codex 중 선택하고, 해당 Provider의 Secrets를 레포에 등록합니다."
           />
           <StepCard
             step={4}
@@ -78,7 +78,7 @@ export default function DocsPage() {
               <PipelineStep
                 icon="💻"
                 stage="코딩 (CODING)"
-                description="Claude Code가 GitHub Actions에서 실행되어 코드를 수정합니다."
+                description="선택한 AI Provider가 GitHub Actions에서 실행되어 코드를 수정합니다."
               />
               <PipelineArrow />
               <PipelineStep
@@ -103,41 +103,59 @@ export default function DocsPage() {
           <Shield className="h-5 w-5 text-primary" />
           Secrets 설정 가이드
         </h2>
-        <div className="grid gap-4 md:grid-cols-2">
+
+        <p className="mb-4 text-sm text-muted-foreground">
+          모든 Provider에 공통으로 필요한 Secret과, Provider별 전용 Secret이
+          있습니다.
+        </p>
+
+        <div className="space-y-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
+              <CardTitle className="text-sm">공통 (모든 Provider)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                PIPELINE_API_KEY
+              </code>
+              <p>PipeAI 서버 인증 키. 설정 페이지에서 발급 후 레포 Secrets에 등록.</p>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Claude Code</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
                   CLAUDE_CODE_OAUTH_TOKEN
                 </code>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>Claude Code 인증에 사용되는 OAuth 토큰입니다.</p>
-              <ol className="ml-4 list-decimal space-y-1">
-                <li>claude.ai에 로그인</li>
-                <li>설정 → API → 토큰 발급</li>
-                <li>레포 Settings → Secrets → Actions에 등록</li>
-              </ol>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
+                <p>Claude Code 인증 OAuth 토큰.</p>
+                <ol className="ml-4 list-decimal space-y-1">
+                  <li>claude.ai에 로그인</li>
+                  <li>설정 → API → 토큰 발급</li>
+                  <li>레포 Settings → Secrets → Actions에 등록</li>
+                </ol>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">OpenAI Codex</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-                  PIPELINE_API_KEY
+                  OPENAI_API_KEY
                 </code>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>파이프라인 API 인증에 사용되는 키입니다.</p>
-              <ol className="ml-4 list-decimal space-y-1">
-                <li>설정 페이지 → API 키 → 새 키 생성</li>
-                <li>생성된 키 복사 (한 번만 표시됨)</li>
-                <li>레포 Settings → Secrets → Actions에 등록</li>
-              </ol>
-            </CardContent>
-          </Card>
+                <p>OpenAI API 키.</p>
+                <ol className="ml-4 list-decimal space-y-1">
+                  <li>platform.openai.com에 로그인</li>
+                  <li>API Keys → Create new secret key</li>
+                  <li>레포 Settings → Secrets → Actions에 등록</li>
+                </ol>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
@@ -161,8 +179,8 @@ export default function DocsPage() {
             answer="아닙니다. AI는 PR을 생성하기만 하고, 머지는 반드시 사용자가 검토 후 승인해야 합니다. 안전망이 내장되어 있습니다."
           />
           <FaqItem
-            question="어떤 프로그래밍 언어를 지원하나요?"
-            answer="Claude Code가 지원하는 모든 언어를 사용할 수 있습니다. TypeScript, Python, Go, Rust, Java 등 대부분의 주요 언어가 포함됩니다."
+            question="어떤 AI Provider를 지원하나요?"
+            answer="현재 Claude Code와 OpenAI Codex를 지원합니다. 프로젝트 설정에서 언제든 변경할 수 있으며, 각 Provider가 지원하는 모든 프로그래밍 언어를 사용할 수 있습니다."
           />
           <FaqItem
             question="파이프라인이 실패하면 어떻게 되나요?"
