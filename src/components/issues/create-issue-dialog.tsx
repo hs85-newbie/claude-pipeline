@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { detectIssueType, ISSUE_TYPE_CONFIG } from "@/lib/issue-helpers";
+import { ISSUE_TYPE_CONFIG } from "@/lib/issue-helpers";
 
 interface Project {
   id: string;
@@ -112,11 +112,7 @@ export function CreateIssueDialog({ projects }: Props) {
             <Input
               id="title"
               value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                // WHY: 제목 기반 유형 자동 추천 — 사용자가 직접 변경 가능
-                setIssueType(detectIssueType(e.target.value));
-              }}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="이슈 제목을 입력하세요"
               required
             />

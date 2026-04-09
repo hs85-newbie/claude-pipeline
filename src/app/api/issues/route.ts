@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { detectIssueType } from "@/lib/issue-helpers";
 import { z } from "zod";
 
 const issueStatusEnum = z.enum(["OPEN", "IN_PROGRESS", "PR_CREATED", "MERGED", "CLOSED"]);
@@ -9,7 +8,7 @@ const issueStatusEnum = z.enum(["OPEN", "IN_PROGRESS", "PR_CREATED", "MERGED", "
 const createIssueSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
-  type: z.enum(["CODE_FIX", "ANALYSIS"]).optional(),
+  type: z.enum(["CODE_FIX", "ANALYSIS"]).default("CODE_FIX"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
   projectId: z.string().min(1),
 });
@@ -99,14 +98,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // WHY: type이 명시되지 않으면 제목 기반으로 자동 판단
-  const issueType = parsed.data.type ?? detectIssueType(parsed.data.title);
-
   const issue = await prisma.issue.create({
     data: {
       title: parsed.data.title,
       description: parsed.data.description,
-      type: issueType,
+      type: parsed.data.type,
       priority: parsed.data.priority,
       projectId: parsed.data.projectId,
     },
