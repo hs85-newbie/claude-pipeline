@@ -11,6 +11,7 @@ const createIssueSchema = z.object({
   type: z.enum(["CODE_FIX", "ANALYSIS"]).default("CODE_FIX"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
   projectId: z.string().min(1),
+  targetBranch: z.string().min(1).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
       type: parsed.data.type,
       priority: parsed.data.priority,
       projectId: parsed.data.projectId,
+      targetBranch: parsed.data.targetBranch,
     },
     include: {
       project: { select: { name: true, githubOwner: true, githubRepo: true } },

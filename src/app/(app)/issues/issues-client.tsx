@@ -29,7 +29,7 @@ const STATUS_TABS: { value: string; label: string }[] = [
 
 interface Props {
   issues: IssueCardData[];
-  projects: { id: string; name: string }[];
+  projects: { id: string; name: string; defaultBranch: string }[];
 }
 
 export function IssuesClient({ issues, projects }: Props) {

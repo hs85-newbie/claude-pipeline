@@ -16,7 +16,7 @@ import type { IssueCardData } from "@/components/issues/issue-card";
 interface Props {
   stats: { total: number; inProgress: number; prCreated: number; merged: number };
   recentIssues: IssueCardData[];
-  projects: { id: string; name: string; githubOwner: string; githubRepo: string; issueCount: number }[];
+  projects: { id: string; name: string; defaultBranch: string; githubOwner: string; githubRepo: string; issueCount: number }[];
   activeDispatchCount: number;
 }
 
@@ -50,7 +50,7 @@ export function DashboardClient({
           </p>
         </div>
         <CreateIssueDialog
-          projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+          projects={projects.map((p) => ({ id: p.id, name: p.name, defaultBranch: p.defaultBranch }))}
         />
       </div>
 

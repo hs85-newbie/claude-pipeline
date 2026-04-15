@@ -35,6 +35,9 @@ export async function triggerDispatch(issueId: string): Promise<boolean> {
 
   const { githubOwner, githubRepo, defaultBranch } = issue.project;
 
+  // WHY: Issue.targetBranch가 지정되어 있으면 우선 사용, 없으면 프로젝트 기본 브랜치
+  const ref = issue.targetBranch ?? defaultBranch;
+
   // WHY: Project.provider 필드 기반으로 AI Provider 분기
   const aiProvider = getProvider(issue.project.provider as AiProviderType);
   const callbackUrl = `${process.env.NEXTAUTH_URL}/api/webhooks/github`;
@@ -49,7 +52,7 @@ export async function triggerDispatch(issueId: string): Promise<boolean> {
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      body: JSON.stringify({ ref: defaultBranch, inputs }),
+      body: JSON.stringify({ ref, inputs }),
     }
   );
 

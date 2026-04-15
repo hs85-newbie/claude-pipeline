@@ -40,9 +40,32 @@ jobs:
           if [ "${{ inputs.issue_type }}" = "ANALYSIS" ]; then
             echo "max_turns=50" >> $GITHUB_OUTPUT
             echo "label=분석" >> $GITHUB_OUTPUT
+            # WHY: ANALYSIS C안 템플릿 강제 — paperclip-split 자동 추출 패턴과 일치
+            cat >> $GITHUB_OUTPUT << 'RULES'
+          instructions<<INST_EOF
+          - docs/ANALYSIS-${{ inputs.issue_id }}.md 파일만 생성하세요. 코드 수정 금지.
+          - ANALYSIS 문서 마지막에 반드시 아래 형식의 "후속 작업 목록" 섹션을 포함하세요:
+
+            ## 후속 작업 목록
+
+            ### P0 — Critical
+            - [ ] **[카테고리] 작업 제목**
+              - 파일: `경로/파일명`
+              - 설명: 구체적 설명
+
+            ### P1 — High (이하 동일 형식)
+
+          - 각 항목은 반드시 `- [ ] **[카테고리] 제목**` 형식이어야 합니다. 이 패턴으로 자동 추출됩니다.
+          INST_EOF
+          RULES
           else
             echo "max_turns=30" >> $GITHUB_OUTPUT
             echo "label=코드 수정" >> $GITHUB_OUTPUT
+            cat >> $GITHUB_OUTPUT << 'RULES'
+          instructions<<INST_EOF
+          - 필요한 코드를 수정하세요.
+          INST_EOF
+          RULES
           fi
 
       - name: 상태 보고 — 진행 중
@@ -66,8 +89,7 @@ jobs:
             ## 중요 규칙
             - git add, git commit, git push 명령을 절대 실행하지 마세요. 파일 생성/수정만 하세요.
             - git 관련 작업은 워크플로우가 자동 처리합니다.
-            - 분석 유형이면 docs/ANALYSIS-${{ inputs.issue_id }}.md 파일만 생성하세요. 코드 수정 금지.
-            - 코드 수정 유형이면 필요한 코드를 수정하세요.
+            ${{ steps.task_type.outputs.instructions }}
           max_turns: ${{ steps.task_type.outputs.max_turns }}
 
       # WHY: Claude가 git push를 안 하므로 워크플로우에서 직접 처리
