@@ -28,6 +28,7 @@ import { ISSUE_TYPE_CONFIG } from "@/lib/issue-helpers";
 interface Project {
   id: string;
   name: string;
+  defaultBranch: string;
 }
 
 interface Props {
@@ -43,6 +44,9 @@ export function CreateIssueDialog({ projects }: Props) {
   const [issueType, setIssueType] = useState("CODE_FIX");
   const [priority, setPriority] = useState("MEDIUM");
   const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
+  const [targetBranch, setTargetBranch] = useState("");
+
+  const selectedProject = projects.find((p) => p.id === projectId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +57,14 @@ export function CreateIssueDialog({ projects }: Props) {
       const res = await fetch("/api/issues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, type: issueType, priority, projectId }),
+        body: JSON.stringify({
+          title,
+          description,
+          type: issueType,
+          priority,
+          projectId,
+          ...(targetBranch ? { targetBranch } : {}),
+        }),
       });
 
       const json = await res.json();
@@ -69,6 +80,7 @@ export function CreateIssueDialog({ projects }: Props) {
       setDescription("");
       setIssueType("CODE_FIX");
       setPriority("MEDIUM");
+      setTargetBranch("");
       router.refresh();
     } catch (error) {
       console.error("[Issue] 생성 실패:", error);
@@ -164,6 +176,19 @@ export function CreateIssueDialog({ projects }: Props) {
                 <SelectItem value="CRITICAL">긴급</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="targetBranch">타겟 브랜치</Label>
+            <Input
+              id="targetBranch"
+              value={targetBranch}
+              onChange={(e) => setTargetBranch(e.target.value)}
+              placeholder={selectedProject?.defaultBranch ?? "main"}
+            />
+            <p className="text-xs text-muted-foreground">
+              비워두면 프로젝트 기본 브랜치({selectedProject?.defaultBranch ?? "main"})를 사용합니다.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">

@@ -15,7 +15,7 @@ export default async function IssuesPage() {
     }),
     prisma.project.findMany({
       where: { userId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, defaultBranch: true },
       orderBy: { name: "asc" },
     }),
   ]);

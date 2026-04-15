@@ -52,6 +52,7 @@ export default async function DashboardPage() {
       projects={projects.map((p) => ({
         id: p.id,
         name: p.name,
+        defaultBranch: p.defaultBranch,
         githubOwner: p.githubOwner,
         githubRepo: p.githubRepo,
         issueCount: p._count.issues,

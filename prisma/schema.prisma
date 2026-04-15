@@ -94,6 +94,7 @@ model Issue {
   priority      IssuePriority @default(MEDIUM)
   closeReason   CloseReason?
   projectId     String
+  targetBranch  String?
   prUrl         String?
   prNumber      Int?
   pipelineStage PipelineStage @default(QUEUED)
