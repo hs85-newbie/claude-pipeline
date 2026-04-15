@@ -90,6 +90,7 @@ export function StepRepo({ state, setState, onNext }: Props) {
           githubOwner: state.selectedRepo.owner,
           githubRepo: state.selectedRepo.name,
           defaultBranch: state.selectedRepo.defaultBranch,
+          provider: state.provider,
         }),
       });
 

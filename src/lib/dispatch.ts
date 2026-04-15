@@ -1,4 +1,6 @@
 import { prisma } from "./prisma";
+import { getProvider } from "./providers";
+import type { AiProviderType } from "./providers";
 
 /**
  * GitHub Actions workflow_dispatch를 트리거하여 파이프라인 실행
@@ -33,14 +35,13 @@ export async function triggerDispatch(issueId: string): Promise<boolean> {
 
   const { githubOwner, githubRepo, defaultBranch } = issue.project;
 
-  // WHY: 이슈 유형에 따라 프롬프트 분기 — 분석은 ANALYSIS 파일만 생성
-  const taskDescription = issue.type === "ANALYSIS"
-    ? `[분석] ${issue.title}. 상세: ${issue.description ?? "없음"}. docs/ANALYSIS-${issue.id}.md 파일로 결과를 작성하세요. 코드 수정 금지.`
-    : `${issue.title}. 상세: ${issue.description ?? "없음"}`;
+  // WHY: Project.provider 필드 기반으로 AI Provider 분기
+  const aiProvider = getProvider(issue.project.provider as AiProviderType);
+  const callbackUrl = `${process.env.NEXTAUTH_URL}/api/webhooks/github`;
+  const inputs = aiProvider.buildDispatchInputs(issue, callbackUrl);
 
-  // GitHub Actions workflow_dispatch trigger
   const response = await fetch(
-    `https://api.github.com/repos/${githubOwner}/${githubRepo}/actions/workflows/pipeai-dispatch.yml/dispatches`,
+    `https://api.github.com/repos/${githubOwner}/${githubRepo}/actions/workflows/${aiProvider.workflowFileName}/dispatches`,
     {
       method: "POST",
       headers: {
@@ -48,15 +49,7 @@ export async function triggerDispatch(issueId: string): Promise<boolean> {
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      body: JSON.stringify({
-        ref: defaultBranch,
-        inputs: {
-          issue_id: issue.id,
-          task: taskDescription,
-          issue_type: issue.type,
-          callback_url: `${process.env.NEXTAUTH_URL}/api/webhooks/github`,
-        },
-      }),
+      body: JSON.stringify({ ref: defaultBranch, inputs }),
     }
   );
 
@@ -64,14 +57,12 @@ export async function triggerDispatch(issueId: string): Promise<boolean> {
     const text = await response.text().catch(() => "");
     console.error(`[Dispatch] GitHub API 실패 (${response.status}):`, text);
 
-    // WHY: 워크플로우 파일 미존재 시 친화적 에러 메시지
     if (response.status === 404) {
-      throw new Error("워크플로우 파일(pipeai-dispatch.yml)이 레포에 없습니다. 템플릿을 먼저 설정해주세요.");
+      throw new Error(`워크플로우 파일(${aiProvider.workflowFileName})이 레포에 없습니다. 템플릿을 먼저 설정해주세요.`);
     }
     throw new Error("GitHub Actions 실행에 실패했습니다.");
   }
 
-  // 이슈 상태를 진행 중으로 전환
   await prisma.issue.update({
     where: { id: issueId },
     data: {

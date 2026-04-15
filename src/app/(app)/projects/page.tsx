@@ -21,6 +21,7 @@ export default async function ProjectsPage() {
         githubOwner: p.githubOwner,
         githubRepo: p.githubRepo,
         defaultBranch: p.defaultBranch,
+        provider: p.provider,
         issueCount: p._count.issues,
         apiKeyCount: p._count.apiKeys,
         createdAt: p.createdAt.toISOString(),

@@ -5,16 +5,20 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { StepGithub } from "./step-github";
 import { StepRepo } from "./step-repo";
+import { StepProvider } from "./step-provider";
 import { StepSecrets } from "./step-secrets";
 import { StepComplete } from "./step-complete";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { AI_PROVIDER } from "@/lib/providers";
+import type { AiProviderType } from "@/lib/providers";
 
 const STEPS = [
   { id: 1, label: "GitHub 연결" },
   { id: 2, label: "레포 선택" },
-  { id: 3, label: "Secrets 확인" },
-  { id: 4, label: "완료" },
+  { id: 3, label: "AI 선택" },
+  { id: 4, label: "Secrets 확인" },
+  { id: 5, label: "완료" },
 ] as const;
 
 export interface OnboardingState {
@@ -26,6 +30,7 @@ export interface OnboardingState {
     defaultBranch: string;
   } | null;
   projectId: string | null;
+  provider: AiProviderType;
 }
 
 export function OnboardingWizard({ githubLogin }: { githubLogin: string }) {
@@ -35,6 +40,7 @@ export function OnboardingWizard({ githubLogin }: { githubLogin: string }) {
     githubLogin,
     selectedRepo: null,
     projectId: null,
+    provider: AI_PROVIDER.CLAUDE,
   });
 
   const progress = (currentStep / STEPS.length) * 100;
@@ -105,9 +111,16 @@ export function OnboardingWizard({ githubLogin }: { githubLogin: string }) {
             />
           )}
           {currentStep === 3 && (
-            <StepSecrets state={state} onNext={handleNext} />
+            <StepProvider
+              state={state}
+              setState={setState}
+              onNext={handleNext}
+            />
           )}
           {currentStep === 4 && (
+            <StepSecrets state={state} onNext={handleNext} />
+          )}
+          {currentStep === 5 && (
             <StepComplete state={state} onComplete={handleComplete} />
           )}
         </motion.div>

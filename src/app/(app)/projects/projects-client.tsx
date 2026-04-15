@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FolderGit2,
   ExternalLink,
   Trash2,
@@ -13,9 +20,14 @@ import {
   CircleDot,
   Key,
   GitBranch,
+  Cpu,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatRelativeTime } from "@/lib/issue-helpers";
+import { getAllProviders } from "@/lib/providers";
+import type { AiProviderType } from "@/lib/providers";
+
+const AI_PROVIDERS = getAllProviders();
 
 interface ProjectItem {
   id: string;
@@ -23,6 +35,7 @@ interface ProjectItem {
   githubOwner: string;
   githubRepo: string;
   defaultBranch: string;
+  provider: string;
   issueCount: number;
   apiKeyCount: number;
   createdAt: string;
@@ -31,6 +44,30 @@ interface ProjectItem {
 export function ProjectsClient({ projects }: { projects: ProjectItem[] }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
+
+  async function handleProviderChange(id: string, provider: AiProviderType) {
+    setUpdating(id);
+    try {
+      const res = await fetch(`/api/projects/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
+      toast.success("AI Provider가 변경되었습니다.");
+      router.refresh();
+    } catch (error) {
+      console.error("[Projects] Provider 변경 실패:", error);
+      toast.error("Provider를 변경할 수 없습니다.");
+    } finally {
+      setUpdating(null);
+    }
+  }
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`"${name}" 프로젝트를 삭제하시겠습니까? 관련 이슈와 API 키도 함께 삭제됩니다.`)) return;
@@ -117,6 +154,27 @@ export function ProjectsClient({ projects }: { projects: ProjectItem[] }) {
                     <Key className="h-3 w-3" />
                     키 {project.apiKeyCount}개
                   </span>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select
+                    value={project.provider}
+                    onValueChange={(v) => handleProviderChange(project.id, v as AiProviderType)}
+                    disabled={updating === project.id}
+                  >
+                    <SelectTrigger className="h-7 w-[160px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AI_PROVIDERS.map((p) => (
+                        <SelectItem key={p.type} value={p.type} className="text-xs">
+                          {p.displayName}
+                          {p.beta && " (Beta)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="mt-2">

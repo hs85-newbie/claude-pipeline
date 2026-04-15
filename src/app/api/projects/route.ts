@@ -8,6 +8,7 @@ const createProjectSchema = z.object({
   githubOwner: z.string().min(1),
   githubRepo: z.string().min(1),
   defaultBranch: z.string().default("main"),
+  provider: z.enum(["CLAUDE", "CODEX"]).default("CLAUDE"),
 });
 
 export async function GET() {
